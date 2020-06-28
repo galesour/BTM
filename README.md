@@ -22,3 +22,4 @@ Xiaohui Yan提出的一个模型
 ## 如何使用
 
   python main.py
+  gogogo
