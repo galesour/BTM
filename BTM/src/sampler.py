@@ -23,17 +23,16 @@ def uni_sample(k=0.0):
 
 
 def mul_sample(vec_p):
-    K = len(vec_p)
-    for i in range(K):
+    for i in range(1, len(vec_p)):
         vec_p[i] += vec_p[i - 1]
+    # pz -= pz[0]
 
     u = random.random()
-    for k in range(K):
-        if vec_p[k] >= u * vec_p[K - 1]:
+    k = 0
+    for i, each in enumerate(vec_p):
+        if each >= u:
+            k = i
             break
-
-    if k == K:
-        k -= 1
 
     return k
 
