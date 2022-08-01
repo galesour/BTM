@@ -9,6 +9,7 @@
 
 # !/usr/bin/env python
 # coding=utf-8
+from nltk.corpus import stopwords
 
 
 class IndexDocs:
@@ -21,12 +22,27 @@ class IndexDocs:
 
     def indexFile(self, doc_path):
         print('indexing doc file: ' + str(doc_path))
+        sw_nltk = stopwords.words('english')
         # wf = open(res_pt, 'w', encoding="utf-8")
 
         for line in open(doc_path, encoding="utf-8"):
             ws = line.strip().split()
             wids = []
             for w in ws:
+                w = w.lower()
+
+                # preprocessing
+                if w in sw_nltk:
+                    continue
+                w = w.replace("!", "")
+                w = w.replace(",", "")
+                w = w.replace(".", "")
+                w = w.replace("?", "")
+                w = w.replace("@", "")
+                w = w.replace("#", "")
+                if w == "":
+                    continue
+
                 if self.if_load_voc:
                     if w in self.wordToIndex:
                         wids.append(self.wordToIndex[w])

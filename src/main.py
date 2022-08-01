@@ -9,7 +9,6 @@
 # -*- coding: utf-8 -*-
 import time
 from Model import *
-import topicDisplay
 
 
 def train_BTM():
@@ -39,15 +38,15 @@ def display_biterm(bs, vocal):
 
 
 if __name__ == "__main__":
-    K = 3
+    K = 5
     alpha = 0.5
     beta = 0.5
-    n_iter = 100
+    n_iter = 200
     save_step = 100
 
     output_dir = "../output/"
     input_dir = "../data/"
-    doc_pt = input_dir + "test.dat"             # 输入的文档
+    doc_pt = input_dir + "test_2.dat"             # 输入的文档
     model_dir = output_dir + "model/"           # 模型存放的文件夹
     voca_pt = output_dir + "vocabulary.txt"     # 生成的词典
 

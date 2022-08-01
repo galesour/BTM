@@ -42,7 +42,7 @@ class Model:
         print("Begin iteration")
         model_dir = output_dir + "/model/k" + str(self.K) + "."
         for i in range(1, self.n_iter + 1):
-            # print("\riter " + str(i) + "/" + str(self.n_iter), end='\r')
+            print("\riter " + str(i) + "/" + str(self.n_iter), end='...')
             for b in range(len(self.bs)):
                 # 根据每个biterm更新文章中的参数
                 # 计算核心代码，self.bs中保存的是词对的biterm
