@@ -39,7 +39,7 @@ def display_biterm(bs, vocal):
 
 
 if __name__ == "__main__":
-    K = 5
+    K = 3
     alpha = 0.5
     beta = 0.5
     n_iter = 100
@@ -51,9 +51,12 @@ if __name__ == "__main__":
     model_dir = output_dir + "model/"           # 模型存放的文件夹
     voca_pt = output_dir + "vocabulary.txt"     # 生成的词典
 
-    print("================ Topic Learning =============")
+    print("\n\n================ Topic Learning =============")
     my_model = train_BTM()
-    display_biterm(my_model.bs, voca_pt)
+    # display_biterm(my_model.bs, voca_pt)
 
-    print("================ Topic Display =============")
-    topicDisplay.run_topicDisplay(['topicDisplay', model_dir, K, voca_pt])
+    print("\n\n================ Topic Inference =============")
+    my_model.infer(doc_pt, model_dir, voca_pt)
+
+    # print("================ Topic Display =============")
+    # topicDisplay.run_topicDisplay(['topicDisplay', model_dir, K, voca_pt])

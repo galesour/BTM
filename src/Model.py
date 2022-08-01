@@ -35,9 +35,9 @@ class Model:
         @param {type}
         @return:
         """
-
-        self.load_docs(doc_path, output_dir)
-        self.model_init()
+        vocabulary_path = output_dir + "/vocabulary.txt"
+        index_docs = self.load_docs(doc_path, vocabulary_path)
+        self.model_init(index_docs)
 
         print("Begin iteration")
         model_dir = output_dir + "/model/k" + str(self.K) + "."
@@ -52,63 +52,39 @@ class Model:
 
         self.save_model(model_dir)
 
-    def infer(self):
-        pass
+    def infer(self, doc_path, model_dir, vocabulary_path):
+        index_docs = self.load_docs(doc_path, vocabulary_path, if_load_voc=True)
+        if self.pz is None and self.pw_z is None:
+            self.load_model(model_dir)
 
-    def model_init(self):
+        indexToWord = sorted(index_docs.wordToIndex.keys(), key=lambda x: index_docs.wordToIndex[x])
+        for each in index_docs.docIndex:
+            pz_d = np.zeros(self.K)  # the probability proportion of the Doc in each Topic
+
+            d = Doc(each)
+            biterms = []
+            d.gen_biterms(biterms)
+            for bi in biterms:
+                # calculate pz_d via probability proportion of each biterm
+                pz_b = self.compute_pz_b(bi)
+
+                for i in range(self.K):
+                    # ？？？原作者的实现仅对p(z|b)进行求和，与论文中Sum(p(z|d) * p(z|b))不一致
+                    pz_d[i] += pz_b[i]
+
+            pz_d = self.normalize_ndarray(pz_d)
+            sentence = list(map(lambda x: indexToWord[x], each))
+            print("Topic: %d\t %s" % (int(np.argmax(pz_d)), sentence))
+
+    def model_init(self, index_docs):
         """
         @description: 初始化模型的代码。
         @param :None
         @return: 初始化self.nv_z 和self.nwz，
         """
-        for biterm in self.bs:
-            # k表示的是从0-K之间的随机数。用来将biterm随机分配给各个topic
-            k = uni_sample(self.K)
-            self.assign_biterm_topic(biterm, k)  # 入参是一个词对(biterm)和他对应的主题
-
-    def load_model(self, model_dir):
-        # load pz - the probability proportion of K topics
-        pt = open(model_dir + "k" + str(self.K) + ".pz")
-        if not pt:
-            Exception("Model file not found!")
-
-        for line in pt.readlines():
-            info = map(lambda x: float(x), line.strip().split())
-            self.pz = np.asarray(list(info))
-        assert (abs(self.pz.sum() - 1) < 1e-4)
-
-        # load pw_z - the probability proportion of each word in each topic
-        pt_2 = open(model_dir + "k" + str(self.K) + ".pw_z")
-        if not pt_2:
-            Exception("Model file not found!")
-
-        tmp = []
-        for line in pt_2.readlines():
-            info = map(lambda x: float(x), line.strip().split())
-            tmp.append(list(info))
-        self.pw_z = np.asarray(tmp)
-        print("n(z)=%d, n(w)=%d\n", self.pw_z.shape[0], self.pw_z.shape[1])
-        assert (self.pw_z.shape[0] > 0 and abs(self.pw_z[0].sum() - 1) < 1e-4)
-
-    def load_docs(self, doc_path, output_dir):
-        """
-        @param output_dir:
-        @description: 生成self.pw_b 和 self.bs
-            self.pw_b表示的是每个单词对应的词频，若一共有7个单词，那么pw_b的size就是7，
-            self.bs表示的是所有的biterm
-        @param doc_path:
-        @return:
-        """
-
-        print("load docs: " + doc_path)
-        vocabulary_path = output_dir + "/vocabulary.txt"
-
-        index_docs = indexDocs.IndexDocs(if_load_voc=False)
-        self.vocabulary_size = index_docs.run_indexDocs(doc_path, vocabulary_path)
-        self.pw_b = np.zeros(self.vocabulary_size)  # the background word distribution
+        self.pw_b = np.zeros(self.vocabulary_size)
         self.nw_z = np.zeros((self.K, self.vocabulary_size))
 
-        # wordToIndex = indexDocs.run_indexDocs(doc_path, vocabulary_path)
         for each in index_docs.docIndex:
             d = Doc(each)
             biterms = []
@@ -137,7 +113,47 @@ class Model:
 
         # 做归一化处理,现在 pw_b中保存的是 词：词频率。
         self.pw_b = self.normalize_ndarray(self.pw_b)
-        # self.pw_b.normalize()
+
+        for biterm in self.bs:
+            # k表示的是从0-K之间的随机数。用来将biterm随机分配给各个topic
+            k = uni_sample(self.K)
+            self.assign_biterm_topic(biterm, k)  # 入参是一个词对(biterm)和他对应的主题
+
+    def load_model(self, model_dir):
+        # load pz - the probability proportion of K topics
+        pt = open(model_dir + "k" + str(self.K) + ".pz")
+        if not pt:
+            Exception("Model file not found!")
+
+        for line in pt.readlines():
+            info = map(lambda x: float(x), line.strip().split())
+            self.pz = np.asarray(list(info))
+        assert (abs(self.pz.sum() - 1) < 1e-4)
+
+        # load pw_z - the probability proportion of each word in each topic
+        pt_2 = open(model_dir + "k" + str(self.K) + ".pw_z")
+        if not pt_2:
+            Exception("Model file not found!")
+
+        tmp = []
+        for line in pt_2.readlines():
+            info = map(lambda x: float(x), line.strip().split())
+            tmp.append(list(info))
+        self.pw_z = np.asarray(tmp)
+        print("n(z)=%d, n(w)=%d\n" % (self.pw_z.shape[0], self.pw_z.shape[1]))
+        assert (self.pw_z.shape[0] > 0 and abs(self.pw_z[0].sum() - 1) < 1e-4)
+
+    def load_docs(self, doc_path, vocabulary_path, if_load_voc=False):
+        """
+        @description: 读取文档并做indexing，生成self.pw_b 和 self.bs
+        """
+
+        print("load docs: " + doc_path)
+
+        index_docs = indexDocs.IndexDocs(if_load_voc=if_load_voc)
+        self.vocabulary_size = index_docs.run_indexDocs(doc_path, vocabulary_path)
+
+        return index_docs
 
     def normalize_ndarray(self, array, smoother=0):
         t_sum = array.sum()
@@ -150,7 +166,6 @@ class Model:
 
         # comput p(z|b)
         pz_b = self.compute_pz_b(bi)
-        pz_b = self.normalize_ndarray(pz_b)
 
         # sample topic for biterm b
         k = mul_sample(pz_b)
@@ -177,23 +192,27 @@ class Model:
         self.nw_z[k][w2] += 1  # self.nwz[2][3] 表示的是在出题2中，2号单词出现的次数。
 
     def compute_pz_b(self, bi):
-        # 计算
-        pz = np.zeros(self.K)
+        pz_b = np.zeros(self.K)
         w1 = bi.get_wi()  # 取到词对中的第一个词编号。
         w2 = bi.get_wj()  # 取到词对中的第二个词编号。
 
         for k in range(self.K):
-            if self.has_background and k == 0:
-                pw1k = self.pw_b[w1]
-                pw2k = self.pw_b[w2]
+            if self.pz is None and self.pw_z is None:
+                if self.has_background and k == 0:
+                    pw1k = self.pw_b[w1]
+                    pw2k = self.pw_b[w2]
+                else:
+                    pw1k = (self.nw_z[k][w1] + self.beta) / (2 * self.nb_z[k] + self.vocabulary_size * self.beta)
+                    pw2k = (self.nw_z[k][w2] + self.beta) / (2 * self.nb_z[k] + 1 + self.vocabulary_size * self.beta)
+
+                # len(self.bs)表示的是在文档中以后多少的词对
+                pk = (self.nb_z[k] + self.alpha) / (len(self.bs) + self.K * self.alpha)
+                pz_b[k] = pk * pw1k * pw2k
             else:
-                pw1k = (self.nw_z[k][w1] + self.beta) / (2 * self.nb_z[k] + self.vocabulary_size * self.beta)
-                pw2k = (self.nw_z[k][w2] + self.beta) / (2 * self.nb_z[k] + 1 + self.vocabulary_size * self.beta)
+                pz_b[k] = self.pz[k] * self.pw_z[k][w1] * self.pw_z[k][w2]
 
-            pk = (self.nb_z[k] + self.alpha) / (len(self.bs) + self.K * self.alpha)  # len(self.bs)表示的是在文档中以后多少的词对
-            pz[k] = pk * pw1k * pw2k
-
-        return pz
+        pz_b = self.normalize_ndarray(pz_b)
+        return pz_b
 
     def save_model(self, output_dir):
         pt = output_dir + "pz"
