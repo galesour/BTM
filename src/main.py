@@ -12,19 +12,6 @@ from Model import *
 import topicDisplay
 
 
-def usage():
-    print("Training Usage: \
-    btm est <K> <W> <alpha> <beta> <n_iter> <save_step> <docs_pt> <model_dir>\n\
-    \tK  int, number of topics, like 20\n \
-    \tW  int, size of vocabulary\n \
-    \talpha   double, Pymmetric Dirichlet prior of P(z), like 1.0\n \
-    \tbeta    double, Pymmetric Dirichlet prior of P(w|z), like 0.01\n \
-    \tn_iter  int, number of iterations of Gibbs sampling\n \
-    \tsave_step   int, steps to save the results\n \
-    \tdocs_pt     string, path of training docs\n \
-    \tmodel_dir   string, output directory")
-
-
 def train_BTM():
     print("===== Run BTM, Topic Number=" + str(K) + ", alpha=" + str(alpha) + ", beta=" +
           str(beta) + ", n_iter=" + str(n_iter) + ", save_step=" + str(save_step) + "=====")
