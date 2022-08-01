@@ -16,11 +16,9 @@ class Doc:
     @param {type}
     @return:
     """
-    ws = []
 
-    def __init__(self, s):
-        self.ws = []
-        self.read_doc(s)
+    def __init__(self, ws):
+        self.ws = ws
 
     def read_doc(self, s):
         for w in s.split(' '):
@@ -38,7 +36,6 @@ class Doc:
         'win': window size for biterm extraction
         'bs': the output biterms
     '''
-
     def gen_biterms(self, bs, win=15):
         if len(self.ws) < 2:
             return

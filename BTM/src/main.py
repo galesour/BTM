@@ -9,10 +9,7 @@
 # -*- coding: utf-8 -*-
 import time
 from Model import *
-import sys
-import indexDocs
 import topicDisplay
-import os
 
 
 def usage():
@@ -28,68 +25,47 @@ def usage():
     \tmodel_dir   string, output directory")
 
 
-def BTM(params):
-    if len(params) < 4:
-        usage()
-    else:
-        if params[0] == "est":
-            K = params[1]
-            W = params[2]
-            alpha = params[3]
-            beta = params[4]
-            n_iter = params[5]
-            save_step = params[6]
-            docs_pt = params[7]
-            dir = params[8]
-            print("===== Run BTM, K=" + str(K) + ", W=" + str(W) + ", alpha=" + str(alpha) + ", beta=" + str(
-                beta) + ", n_iter=" + str(n_iter) + ", save_step=" + str(save_step) + "=====")
-            clock_start = time.clock()
-            model = Model(K, W, alpha, beta, n_iter, save_step)
-            model.run(docs_pt, dir)
-            clock_end = time.clock()
-            print("procedure time : %f seconds" % (clock_end - clock_start))
+def train_BTM():
+    print("===== Run BTM, Topic Number=" + str(K) + ", alpha=" + str(alpha) + ", beta=" +
+          str(beta) + ", n_iter=" + str(n_iter) + ", save_step=" + str(save_step) + "=====")
 
-            return model
+    clock_start = time.clock()
+    model = Model(K, alpha, beta, n_iter, save_step)
+    model.train(doc_pt, output_dir)
+    clock_end = time.clock()
 
-        else:
-            usage()
+    print("procedure time : %f seconds" % (clock_end - clock_start))
+
+    return model
 
 
 def display_biterm(bs, vocal):
     voc = {}
     for i, line in enumerate(open(vocal).readlines()):
-        voc[i] = line.strip().split()[1]
+        wid, word = line.strip().split()
+        voc[i] = word
 
     for bi in bs:
-        w1 = bi.get_wi()  # 词对中的一个词序号
-        w2 = bi.get_wj()  # 词对中的第二个词序号
+        w1 = bi.get_wi()    # 词对中的一个词序号
+        w2 = bi.get_wj()    # 词对中的第二个词序号
         print("%s\t%s\t%d" % (voc[w1], voc[w2], bi.get_z()))
 
 
 if __name__ == "__main__":
-    mode = "est"
     K = 5
     alpha = 0.5
     beta = 0.5
-    n_iter = 100  # 十次迭代
+    n_iter = 100
     save_step = 100
+
     output_dir = "../output/"
     input_dir = "../sample-data/"
-    doc_pt = input_dir + "test.dat"  # 输入的文档
+    doc_pt = input_dir + "test.dat"             # 输入的文档
+    model_dir = output_dir + "model/"           # 模型存放的文件夹
+    voca_pt = output_dir + "vocabulary.txt"     # 生成的词典
 
-    model_dir = output_dir + "model/"  # 模型存放的文件夹
-    voca_pt = output_dir + "voca.txt"  # 生成的词典
-    dwid_pt = output_dir + "doc_wids.txt"  # 每篇文档由对应的序号单词组成
-
-    print("=============== Index Docs =============")
-
-    W = indexDocs.run_indexDocs(['indexDocs', doc_pt, dwid_pt, voca_pt])
-    print("Vocabulary size : " + str(W))
-
-    my_params = [mode, K, W, alpha, beta, n_iter, save_step, dwid_pt, model_dir]
-
-    print("=============== Topic Learning =============")
-    my_model = BTM(my_params)
+    print("================ Topic Learning =============")
+    my_model = train_BTM()
     display_biterm(my_model.bs, voca_pt)
 
     print("================ Topic Display =============")

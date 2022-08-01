@@ -9,46 +9,74 @@
 
 # !/usr/bin/env python
 # coding=utf-8
-# translate word into id in documents
-
-w2id = {}
 
 
-def indexFile(pt, res_pt):
-    print('index file: ' + str(pt))
-    wf = open(res_pt, 'w', encoding="utf-8")
-    for line in open(pt, encoding="utf-8"):
-        ws = line.strip().split()
-        for w in ws:
-            if w not in w2id:
-                w2id[w] = len(w2id)
+class IndexDocs:
+    # translate word into id in documents
 
-        wids = [w2id[w] for w in ws]
-        # print>>wf,' '.join(map(str, wids))
-        print(' '.join(map(str, wids)), file=wf)
+    def __init__(self, if_load_voc=False):
+        self.wordToIndex = {}
+        self.docIndex = []
+        self.if_load_voc = if_load_voc
 
-    print('write file: ' + str(res_pt))
+    def indexFile(self, doc_path):
+        print('indexing doc file: ' + str(doc_path))
+        # wf = open(res_pt, 'w', encoding="utf-8")
 
+        for line in open(doc_path, encoding="utf-8"):
+            ws = line.strip().split()
+            wids = []
+            for w in ws:
+                if self.if_load_voc:
+                    if w in self.wordToIndex:
+                        wids.append(self.wordToIndex[w])
+                    else:
+                        wids.append(self.wordToIndex["unknown"])
+                else:
+                    if w not in self.wordToIndex:
+                        self.wordToIndex[w] = len(self.wordToIndex)
+                    wids.append(self.wordToIndex[w])
 
-def write_w2id(res_pt):
-    print('write:' + str(res_pt))
-    wf = open(res_pt, 'w')
-    for w, wid in sorted(w2id.items(), key=lambda d: d[1]):
-        print('%d\t%s' % (wid, w), file=wf)
+            self.docIndex.append(wids)
+            # print>>wf,' '.join(map(str, wids))
+            # print(' '.join(map(str, wids)), file=wf)
 
+        if not self.if_load_voc:
+            self.wordToIndex["unknown"] = len(self.wordToIndex)
+        # print('write file: ' + str(res_pt))
 
-def run_indexDocs(argv):
-    if len(argv) < 4:
-        print('Usage: python %s <doc_pt> <dwid_pt> <voca_pt>' % argv[0])
-        print('\tdoc_pt    input docs to be indexed, each line is a doc with the format "word word ..."')
-        print('\tdwid_pt   output docs after indexing, each line is a doc with the format "wordId wordId..."')
-        print('\tvoca_pt   output vocabulary file, each line is a word with the format "wordId    word"')
-        exit(1)
+    def load_voc(self, vocal_path):
+        for i, line in enumerate(open(vocal_path).readlines()):
+            word = line.strip().split()[1]
+            self.wordToIndex[word] = i
 
-    doc_pt = argv[1]
-    dwid_pt = argv[2]
-    voca_pt = argv[3]
-    indexFile(doc_pt, dwid_pt)
-    print('n(w)=' + str(len(w2id)))
-    write_w2id(voca_pt)
-    return len(w2id)
+    def write_voc(self, res_pt):
+        print('write:' + str(res_pt))
+        wf = open(res_pt, 'w')
+
+        # for wid in range(len(self.wordToIndex)):
+        #     word = self.wordToIndex[wid]
+        #     print('%d\t%s' % (wid, word), file=wf)
+
+        for w, wid in sorted(self.wordToIndex.items(), key=lambda d: d[1]):
+            print('%d\t%s' % (wid, w), file=wf)
+        wf.close()
+
+    def run_indexDocs(self, doc_path, vocal_path):
+        # if len(argv) < 4:
+        #     print('Usage: python %s <doc_pt> <dwid_pt> <voca_pt>' % argv[0])
+        #     print('\tdoc_pt    input docs to be indexed, each line is a doc with the format "word word ..."')
+        #     print('\tdwid_pt   output docs after indexing, each line is a doc with the format "wordId wordId..."')
+        #     print('\tvoca_pt   output vocabulary file, each line is a word with the format "wordId    word"')
+        #     exit(1)
+
+        if self.if_load_voc:
+            self.load_voc(vocal_path)
+
+        self.indexFile(doc_path)
+        print('n(words)=' + str(len(self.wordToIndex)))
+
+        if not self.if_load_voc:
+            self.write_voc(vocal_path)
+
+        return len(self.wordToIndex)
