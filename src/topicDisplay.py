@@ -147,7 +147,7 @@ if __name__ == "__main__":
     n_iter = 10  # 十次迭代
     save_step = 100
     dir = "../output/"
-    input_dir = "../sample-data/"
+    input_dir = "../data/"
     model_dir = dir + "model/"  # 模型存放的文件夹
     voca_pt = dir + "voca.txt"  # 生成的词典
     dwid_pt = dir + "doc_wids.txt"  # 每篇文档由对应的序号单词组成

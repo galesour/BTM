@@ -59,7 +59,7 @@ if __name__ == "__main__":
     save_step = 100
 
     output_dir = "../output/"
-    input_dir = "../sample-data/"
+    input_dir = "../data/"
     doc_pt = input_dir + "test.dat"             # 输入的文档
     model_dir = output_dir + "model/"           # 模型存放的文件夹
     voca_pt = output_dir + "vocabulary.txt"     # 生成的词典

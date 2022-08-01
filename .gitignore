@@ -2,6 +2,6 @@
 /shelf/
 /workspace.xml
 *.idea*
-*/output*
+*output*
 *.pz
 *.pw_z

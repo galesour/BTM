@@ -6,7 +6,7 @@ class Infer:
         self.type = infer_type
         self.k = k
         self.pz = None      # the probability proportion of K topics
-        self.pw_z = None
+        self.pw_z = None    # the probability proportion of each word in each topic
 
     def run(self, docs_pt, model_dir):
         self.load_para(model_dir)
@@ -34,3 +34,4 @@ class Infer:
         self.pw_z = np.asarray(tmp)
         print("n(z)=%d, n(w)=%d\n", self.pw_z.shape[0], self.pw_z.shape[1])
         assert(self.pw_z.shape[0] > 0 and abs(self.pw_z[0].sum() - 1) < 1e-4)
+
