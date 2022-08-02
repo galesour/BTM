@@ -1,11 +1,3 @@
-"""
-@Author: 一蓑烟雨任平生
-@Date: 2020-02-18 17:08:33
-@LastEditTime: 2020-03-08 15:54:21
-@LastEditors: Please set LastEditors
-@Description: In User Settings Edit
-@FilePath: /BTMpy/src/main.py
-"""
 # -*- coding: utf-8 -*-
 import time
 from Model import *
@@ -46,7 +38,7 @@ if __name__ == "__main__":
 
     output_dir = "../output/"
     input_dir = "../data/"
-    doc_pt = input_dir + "test_2.dat"             # 输入的文档
+    doc_pt = input_dir + "test.dat"             # 输入的文档
     model_dir = output_dir + "model/"           # 模型存放的文件夹
     voca_pt = output_dir + "vocabulary.txt"     # 生成的词典
 
