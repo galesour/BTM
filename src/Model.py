@@ -3,6 +3,7 @@ import numpy as np
 import indexDocs
 from doc import Doc
 from sampler import *
+import os
 
 
 class Model:
@@ -35,6 +36,9 @@ class Model:
         @param {type}
         @return:
         """
+        if not os.path.exists(output_dir):
+            os.mkdir(output_dir)
+            os.mkdir(output_dir + "/model")
         vocabulary_path = output_dir + "/vocabulary.txt"
         index_docs = self.load_docs(doc_path, vocabulary_path)
         self.model_init(index_docs)
@@ -70,6 +74,7 @@ class Model:
 
                 for i in range(self.K):
                     # ？？？原作者的实现仅对p(z|b)进行求和，与论文中Sum(p(z|d) * p(z|b))不一致
+                    # => 由于p(z|b)近于均匀分布，因此这里不必再进行计算
                     pz_d[i] += pz_b[i]
 
             pz_d = self.normalize_ndarray(pz_d)

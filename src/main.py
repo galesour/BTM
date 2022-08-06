@@ -40,14 +40,14 @@ if __name__ == "__main__":
     input_dir = "../data/"
     doc_pt = input_dir + "test.dat"             # 输入的文档
     model_dir = output_dir + "model/"           # 模型存放的文件夹
-    voca_pt = output_dir + "vocabulary.txt"     # 生成的词典
+    vocabulary_path = output_dir + "vocabulary.txt"     # 生成的词典
 
     print("\n\n================ Topic Learning =============")
     my_model = train_BTM()
-    # display_biterm(my_model.bs, voca_pt)
+    # display_biterm(my_model.bs, vocabulary_path)
 
     print("\n\n================ Topic Inference =============")
-    my_model.infer(doc_pt, model_dir, voca_pt)
+    my_model.infer(doc_pt, model_dir, vocabulary_path)
 
     # print("================ Topic Display =============")
-    # topicDisplay.run_topicDisplay(['topicDisplay', model_dir, K, voca_pt])
+    # topicDisplay.run_topicDisplay(['topicDisplay', model_dir, K, vocabulary_path])

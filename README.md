@@ -1,12 +1,3 @@
-<!--
- * @Author: 一蓑烟雨任平生
- * @Date: 2020-03-08 17:38:48
- * @LastEditTime: 2022-07-31 18:48:42
- * @LastEditors: Qinyun Lin
- * @Description: In User Settings Edit
- * @FilePath: /BTMpy/Users/duyining/Desktop/BTM/README.md
- -->
-
 # BTM
 
 2022-7-31更新
