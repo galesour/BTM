@@ -18,12 +18,12 @@ Code structure has been rearranged, and many notes are added for understanding t
 - Edit configs in ```src/evaluateBTM.py```
 
 ---
-2022-8-8 Update
+#### 2022-8-8 Update
 - Integrated stopwords for data preprocessing
 - Add Model Evaluation with coherence score
 
 ---
-2022-7-31 Update
+#### 2022-7-31 Update
 - Rearrange code structure
 - Implement **Topic inference**
 - Replace **pvec** class with numpy
