@@ -4,6 +4,7 @@ import indexDocs
 from doc import Doc
 from sampler import *
 import os
+import math
 
 
 class Model:
@@ -21,6 +22,7 @@ class Model:
 
         self.pz = None              # the probability proportion of K topics
         self.pw_z = None            # the probability proportion of each word in each topic
+        self.topic_words = list()   # words index for each topic, sorted by word frequency within each topic
 
         # If true, the topic 0 is set to a background topic that equals to the empirical word distribution.
         # It can be used to filter out common words
@@ -62,6 +64,10 @@ class Model:
             self.load_model(model_dir)
 
         indexToWord = sorted(index_docs.wordToIndex.keys(), key=lambda x: index_docs.wordToIndex[x])
+        # topic_words_with_frequency = sorted(list(zip(indexToWord, self.pw_b)), key=lambda x: x[1])
+
+        topic_dict = {}
+        topic_dict_index = {}
         for each in index_docs.docIndex:
             pz_d = np.zeros(self.K)  # the probability proportion of the Doc in each Topic
 
@@ -78,8 +84,25 @@ class Model:
                     pz_d[i] += pz_b[i]
 
             pz_d = self.normalize_ndarray(pz_d)
+            k = int(np.argmax(pz_d))            # 确定该doc所属的topic编号k
+
             sentence = list(map(lambda x: indexToWord[x], each))
-            print("Topic: %d\t %s" % (int(np.argmax(pz_d)), sentence))
+            sentence = str(sentence).strip("[]").replace(",", "").replace("\'", "")
+
+            if k in topic_dict_index:
+                topic_dict[k].append(sentence)
+                topic_dict_index[k].append(each)
+            else:
+                topic_dict[k] = [sentence]
+                topic_dict_index[k] = [each]
+
+            print("Topic: %d\t %s" % (k, sentence))
+
+        self.generate_topic_words()
+        # for t in range(5, 11):
+        #     self.cal_coherence(t, topic_dict_index)
+
+        return topic_dict
 
     def model_init(self, index_docs):
         """
@@ -100,21 +123,6 @@ class Model:
                 self.pw_b[w] += 1  # 统计词频
             for b in biterms:
                 self.bs.append(b)  # self.bs中添加的是一个biterm类。类的内容是这段文本中所有可能的词的组合.
-
-        # rf = open(doc_path)
-        # if not rf:
-        #     print("file not found: " + doc_path)
-        #
-        # for line in rf.readlines():
-        #     d = Doc(line)
-        #     biterms = []  # 一句话里的单词能组成的词对。
-        #     d.gen_biterms(biterms)
-        #     # statistic the empirical word distribution
-        #     for i in range(d.size()):
-        #         w = d.get_w(i)
-        #         self.pw_b[w] += 1  # 这行代码是在统计词频
-        #     for b in biterms:
-        #         self.bs.append(b)  # self.bs中添加的是一个biterm类。类的内容是这段文本中所有可能的词的组合.
 
         # 做归一化处理,现在 pw_b中保存的是 词：词频率。
         self.pw_b = self.normalize_ndarray(self.pw_b)
@@ -160,6 +168,13 @@ class Model:
 
         return index_docs
 
+    def generate_topic_words(self):
+        for k in range(self.K):
+            topic_words_index_with_frequency = sorted(list(zip(range(0, self.vocabulary_size), self.pw_z[k])),
+                                                      key=lambda x: x[1], reverse=True)
+            topic_words_index = list(map(lambda x: x[0], topic_words_index_with_frequency))
+            self.topic_words.append(topic_words_index)
+
     def normalize_ndarray(self, array, smoother=0):
         t_sum = array.sum()
 
@@ -169,7 +184,7 @@ class Model:
     def update_biterm(self, bi):
         self.reset_biterm_topic(bi)
 
-        # comput p(z|b)
+        # compute p(z|b) in the paper
         pz_b = self.compute_pz_b(bi)
 
         # sample topic for biterm b
@@ -219,6 +234,35 @@ class Model:
         pz_b = self.normalize_ndarray(pz_b)
         return pz_b
 
+    def cal_coherence(self, topic_word_num, topic_dict):
+        print("\nEvaluating coherence score with %d topic words:" % topic_word_num)
+
+        text = [d for docs in topic_dict.values() for d in docs]
+
+        for k in range(self.K):
+            if k not in topic_dict:
+                continue
+
+            topic_words_index = self.topic_words[k]
+            score = 0
+            for t in range(1, topic_word_num):
+                for m in range(t):
+                    D_vm = 0
+                    D_vt_vm = 0
+                    vm = topic_words_index[m]
+                    vt = topic_words_index[t]
+                    for doc in text:
+                        if vm in doc:
+                            D_vm += 1
+                            if vt in doc:
+                                D_vt_vm += 1
+                    if D_vm == 0:
+                        # 此处应该不能直接跳过，否则聚类效果不好的docs反而会使得分数较高
+                        continue
+                    score += math.log((D_vt_vm + 1) / D_vm)
+
+            print("\tTopic: %d\tCoherence score: %f" % (k, score))
+
     def save_model(self, output_dir):
         pt = output_dir + "pz"
         print("\nwrite p(z): " + pt)
@@ -228,8 +272,7 @@ class Model:
         print("write p(w|z): " + pt2)
         self.save_pw_z(pt2)
 
-    # p(z) is determinated by the overall proportions of biterms in it
-    # 函数计算的是每个主题的分布。
+    # p(z) is determined by the overall proportions of biterms in it
     def save_pz(self, pt):
         self.pz = np.asarray(self.nb_z)
         self.pz = self.normalize_ndarray(self.pz, self.alpha)
@@ -237,7 +280,6 @@ class Model:
         wf = open(pt, 'w')
         wf.write(str(self.pz.tolist()).strip("[]").replace(",", ""))
 
-    # 函数计算的是每个主题下各个单词的分布
     def save_pw_z(self, pt):
         self.pw_z = np.ones((self.K, self.vocabulary_size))  # 生成5行2700列的矩阵。用来保存每个主题中，各个单词出现的概率。
         wf = open(pt, 'w')

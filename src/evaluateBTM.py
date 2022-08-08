@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import time
 from Model import *
+from coherenceScore import cal_coherence
 
 
 def train_BTM():
@@ -33,21 +34,21 @@ if __name__ == "__main__":
     K = 5
     alpha = 0.5
     beta = 0.5
-    n_iter = 200
-    save_step = 100
+    n_iter = 100
+    save_step = 1000
 
     output_dir = "../output/"
     input_dir = "../data/"
-    doc_pt = input_dir + "test.dat"             # 输入的文档
-    model_dir = output_dir + "model/"           # 模型存放的文件夹
-    vocabulary_path = output_dir + "vocabulary.txt"     # 生成的词典
+    doc_pt = input_dir + "test.dat"                     # input documents
+    model_dir = output_dir + "model/"                   # dictionary to save model
+    vocabulary_path = output_dir + "vocabulary.txt"     # generated vocabulary
 
     print("\n\n================ Topic Learning =============")
     my_model = train_BTM()
     # display_biterm(my_model.bs, vocabulary_path)
 
     print("\n\n================ Topic Inference =============")
-    my_model.infer(doc_pt, model_dir, vocabulary_path)
+    topic_dict = my_model.infer(doc_pt, model_dir, vocabulary_path)
 
-    # print("================ Topic Display =============")
-    # topicDisplay.run_topicDisplay(['topicDisplay', model_dir, K, vocabulary_path])
+    for T in [5, 10, 20]:
+        print("Coherence Score(T=%d) = %f" % (T, cal_coherence(topic_dict, my_model.topic_words, top_n=T)))

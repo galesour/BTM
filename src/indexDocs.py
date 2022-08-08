@@ -1,12 +1,3 @@
-"""
-@Author: 一蓑烟雨任平生
-@Date: 2020-02-18 17:08:33
-@LastEditTime: 2020-02-19 10:59:25
-@LastEditors: Please set LastEditors
-@Description: In User Settings Edit
-@FilePath: /BTMpy/src/indexDocs.py
-"""
-
 # !/usr/bin/env python
 # coding=utf-8
 from nltk.corpus import stopwords
@@ -16,6 +7,7 @@ class IndexDocs:
     # translate word into id in documents
 
     def __init__(self, if_load_voc=False):
+        self.texts = []
         self.wordToIndex = {}
         self.docIndex = []
         self.if_load_voc = if_load_voc
@@ -27,11 +19,11 @@ class IndexDocs:
 
         for line in open(doc_path, encoding="utf-8"):
             ws = line.strip().split()
+            temp_ws = []
             wids = []
             for w in ws:
-                w = w.lower()
-
                 # preprocessing
+                w = w.lower()
                 if w in sw_nltk:
                     continue
                 w = w.replace("!", "")
@@ -40,8 +32,12 @@ class IndexDocs:
                 w = w.replace("?", "")
                 w = w.replace("@", "")
                 w = w.replace("#", "")
+                w = w.replace(":", "")
+                w = w.replace("...", "")
                 if w == "":
                     continue
+
+                temp_ws.append(w)
 
                 if self.if_load_voc:
                     if w in self.wordToIndex:
@@ -53,6 +49,7 @@ class IndexDocs:
                         self.wordToIndex[w] = len(self.wordToIndex)
                     wids.append(self.wordToIndex[w])
 
+            self.texts.append(temp_ws)
             self.docIndex.append(wids)
             # print>>wf,' '.join(map(str, wids))
             # print(' '.join(map(str, wids)), file=wf)
