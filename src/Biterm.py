@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 
 
-class Biterm():
+class Biterm:
     wi = 0
     wj = 0
     z = 0
 
-    def __init__(self,w1=None,w2=None,s=None):
-        if w1 != None and w2 != None:
-            self.wi = min(w1,w2)
-            self.wj = max(w1,w2)
-        elif w1 == None and w2 == None and s != None:
+    def __init__(self, w1=None, w2=None, s=None):
+        if w1 is not None and w2 is not None:
+            self.wi = min(w1, w2)
+            self.wj = max(w1, w2)
+        elif w1 is None and w2 is None and s is not None:
             w = s.split(' ')
             self.wi = w[0]
             self.wj = w[1]
@@ -25,7 +25,7 @@ class Biterm():
     def get_z(self):
         return self.z
 
-    def set_z(self,k):
+    def set_z(self, k):
         self.z = k
 
     def reset_z(self):
